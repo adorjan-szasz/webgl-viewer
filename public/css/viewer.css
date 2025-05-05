@@ -1,0 +1,110 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: sans-serif;
+}
+
+header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    height: 96px;
+    background-color: rgba(255, 255, 255, 0.9);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+nav a {
+    margin-left: 20px;
+    text-decoration: none;
+    color: #0366d6;
+    font-weight: bold;
+}
+
+main {
+    padding-top: 120px;
+    padding-bottom: 100px;
+    z-index: 2;
+    position: relative;
+    background-color: #f9f9f9;
+}
+
+footer {
+    position: relative;
+    z-index: 2;
+    background-color: #eee;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9rem;
+}
+
+#canvas-container {
+    position: absolute;
+    top: 96px;
+    bottom: 100px;
+    left: 0;
+    right: 0;
+    background-color: #e5e7eb;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#rotateBtn {
+    position: fixed;
+    top: 110px;
+    left: 20px;
+    z-index: 10;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#rotateBtn:hover {
+    background-color: #059669;
+}
+
+#uploadForm {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: fixed;
+    top: 110px;
+    right: 20px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/*main section {*/
+/*    max-width: 720px;*/
+/*    margin: auto;*/
+/*    text-align: center;*/
+/*    padding: 20px;*/
+/*}*/
+
+#canvas-container canvas {
+    outline: none;
+}
+
+.drag-hover {
+    border: 2px dashed #3b82f6;
+    background-color: #e0f2fe;
+}
