@@ -3,29 +3,30 @@
 $(document).ready(function () {
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl2");
+
     const container = document.getElementById("canvas-container");
 
     if (!gl) {
-        showError("Unable to initialize WebGL2. Your browser or machine may not support it.");
+        showError("Unable to initialize WebGL2. WebGL2 not supported by your browser.");
 
         return;
     }
 
-    // WebGL2 shaders (GLSL ES 3.00)
+    // Shaders
     const vsSource = `#version 300 es
-        in vec4 aVertexPosition;
+        layout(location = 0) in vec3 aVertexPosition;
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
-        void main() {
-            gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+        void main(void) {
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
         }
     `;
 
     const fsSource = `#version 300 es
         precision highp float;
-        out vec4 outColor;
-        void main() {
-            outColor = vec4(0.2, 0.8, 0.2, 1.0);
+        out vec4 fragColor;
+        void main(void) {
+            fragColor = vec4(0.2, 0.8, 0.2, 1.0);
         }
     `;
 
@@ -38,9 +39,15 @@ $(document).ready(function () {
     gl.attachShader(shaderProgram, fragmentShader);
 
     gl.linkProgram(shaderProgram);
+
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        showError("Unable to initialize shader program.");
+
+        return;
+    }
+
     gl.useProgram(shaderProgram);
 
-    const vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
     const uProjectionMatrix = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
     const uModelViewMatrix = gl.getUniformLocation(shaderProgram, "uModelViewMatrix");
 
@@ -50,10 +57,11 @@ $(document).ready(function () {
 
     let modelViewMatrix = mat4.create();
     let angle = 0;
-    let defaultCubeRendered = false;
+    let vao = null;
     let currentMesh = null;
 
-    function resizeCanvas() {
+    // Resize using ResizeObserver
+    const resizeObserver = new ResizeObserver(() => {
         const rect = container.getBoundingClientRect();
 
         canvas.width = rect.width;
@@ -61,24 +69,13 @@ $(document).ready(function () {
 
         gl.viewport(0, 0, canvas.width, canvas.height);
 
-        // Updating the projection matrix
         mat4.perspective(projectionMatrix, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100);
         gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
 
-        // Redrawing the scene
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        drawScene();
+    });
 
-        if (currentMesh) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, currentMesh.vertexBuffer);
-            gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(vertexPosition);
-            gl.drawArrays(gl.TRIANGLES, 0, currentMesh.vertexBuffer.numItems || currentMesh.vertexBuffer.length / 3);
-        } else {
-            drawDefaultCube();
-        }
-    }
-
-    window.addEventListener("resize", resizeCanvas);
+    resizeObserver.observe(container);
 
     // Compiling shaders
     function loadShader(type, source) {
@@ -89,6 +86,8 @@ $(document).ready(function () {
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
             showError('Shader compile error: ' + gl.getShaderInfoLog(shader));
+
+            gl.deleteShader(shader);
 
             return null;
         }
@@ -105,78 +104,74 @@ $(document).ready(function () {
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clearColor(0.1, 0.1, 0.1, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // Default Cube Rendering
-    function drawDefaultCube() {
-        const positions = [
-            // Front
-            -1, -1,  1,  1, -1,  1,  1,  1,  1,
-            -1, -1,  1,  1,  1,  1, -1,  1,  1,
-
-            // Back
-            -1, -1, -1, -1,  1, -1,  1,  1, -1,
-            -1, -1, -1,  1,  1, -1,  1, -1, -1,
-
-            // Top
-            -1,  1, -1, -1,  1,  1,  1,  1,  1,
-            -1,  1, -1,  1,  1,  1,  1,  1, -1,
-
-            // Bottom
-            -1, -1, -1,  1, -1, -1,  1, -1,  1,
-            -1, -1, -1,  1, -1,  1, -1, -1,  1,
-
-            // Right
-            1, -1, -1,  1,  1, -1,  1,  1,  1,
-            1, -1, -1,  1,  1,  1,  1, -1,  1,
-
-            // Left
-            -1, -1, -1, -1, -1,  1, -1,  1,  1,
-            -1, -1, -1, -1,  1,  1, -1,  1, -1
-        ];
-
-        const positionBuffer = gl.createBuffer();
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-        gl.enableVertexAttribArray(vertexPosition);
-        gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-
-        gl.drawArrays(gl.TRIANGLES, 0, 36);
-
-        defaultCubeRendered = true;
-    }
-
-    // Rotation handler
-    $('#rotateBtn').click(function () {
-        angle += 0.1;
+    function drawScene() {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         mat4.identity(modelViewMatrix);
         mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -6]);
         mat4.rotate(modelViewMatrix, modelViewMatrix, angle, [0, 1, 0]);
 
         gl.uniformMatrix4fv(uModelViewMatrix, false, modelViewMatrix);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        if (currentMesh) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, currentMesh.vertexBuffer);
-            gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.drawArrays(gl.TRIANGLES, 0, currentMesh.vertexBuffer.numItems || currentMesh.vertexBuffer.length / 3);
-        } else {
-            drawDefaultCube();
+        if (vao) {
+            gl.bindVertexArray(vao);
+
+            const count = currentMesh?.indexCount || 36;
+
+            gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0);
+            gl.bindVertexArray(null);
         }
+    }
+
+    function createCubeVAO() {
+        const positions = new Float32Array([
+            -1, -1,  1,  1, -1,  1,  1,  1,  1,  -1,  1,  1, // front
+            -1, -1, -1, -1,  1, -1, 1,  1, -1,  1, -1, -1, // back
+            -1,  1, -1, -1,  1,  1, 1,  1,  1,  1,  1, -1, // top
+            -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, // bottom
+            1, -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, // right
+            -1, -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1 // left
+        ]);
+
+        const indices = new Uint16Array([
+            0, 1, 2, 0, 2, 3,
+            4, 5, 6, 4, 6, 7,
+            8, 9,10, 8,10,11,
+            12,13,14,12,14,15,
+            16,17,18,16,18,19,
+            20,21,22,20,22,23
+        ]);
+
+        vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
+
+        const posBuffer = gl.createBuffer();
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+        const indexBuffer = gl.createBuffer();
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+        gl.bindVertexArray(null);
+    }
+
+    $('#rotateBtn').click(() => {
+        angle += 0.1;
+
+        drawScene();
     });
 
-    // Drag&Drop
-    const dropZone = $('#uploadForm');
-
-    dropZone.on('dragover', function (e) {
+    $('#uploadForm').on('dragover dragenter', e => {
         e.preventDefault();
 
-        dropZone.addClass('ring-2 ring-blue-400 bg-blue-50');
-    }).on('dragleave drop', function () {
-        dropZone.removeClass('ring-2 ring-blue-400 bg-blue-50');
+        $('#uploadForm').addClass('ring-2 ring-blue-400 bg-blue-50');
+    }).on('dragleave drop', () => {
+        $('#uploadForm').removeClass('ring-2 ring-blue-400 bg-blue-50');
     }).on('drop', function (e) {
         e.preventDefault();
 
@@ -184,6 +179,7 @@ $(document).ready(function () {
 
         if (files.length > 0) {
             $('#modelFile')[0].files = files;
+
             // Preventing automatic upload
             // $('#uploadForm').submit();
 
@@ -191,7 +187,6 @@ $(document).ready(function () {
         }
     });
 
-    // Upload form submission
     $('#uploadForm').on('submit', function (e) {
         e.preventDefault();
 
@@ -225,7 +220,7 @@ $(document).ready(function () {
                 loadOBJModel(response.path);
             },
             error: function (e) {
-                showError('Upload failed: ' + e.responseJSON.message);
+                showError('Upload failed: ' + (e.responseJSON?.message || 'Unknown error'));
             },
             complete: function () {
                 showLoading(false);
@@ -241,17 +236,19 @@ $(document).ready(function () {
 
             OBJ.initMeshBuffers(gl, mesh);
             currentMesh = mesh;
+            currentMesh.indexCount = mesh.indexBuffer.numItems || mesh.indices.length;
 
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            vao = gl.createVertexArray();
 
-            const vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition');
-            gl.enableVertexAttribArray(vertexPosition);
-
+            gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
-            gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.drawArrays(gl.TRIANGLES, 0, mesh.vertexBuffer.numItems || mesh.vertexBuffer.length / 3);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
 
-            defaultCubeRendered = false;
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+
+            drawScene();
+            gl.bindVertexArray(null);
         }, 'text').fail(function () {
             showError('Failed to load the model from the server.');
         }).always(function () {
@@ -269,9 +266,7 @@ $(document).ready(function () {
         setTimeout(() => $('#errorContainer').addClass('hidden'), 5000);
     }
 
-    // Initialize default cube
-    drawDefaultCube();
-
-    resizeCanvas();
+    createCubeVAO();
+    drawScene();
 });
 
