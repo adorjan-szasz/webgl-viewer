@@ -24,9 +24,11 @@
                 <img id="logo" src="{{ asset('assets/laravel_webgl_logo.png') }}" alt="Logo" class="max-h-full transition-all duration-300">
             </a>
 
-            {{--            <nav class="space-x-4">--}}
-            {{--                <a href="#about" class="text-blue-600 hover:underline font-semibold">About</a>--}}
-            {{--            </nav>--}}
+            <nav class="space-x-4">
+                <a href="/" class="text-blue-600 hover:underline font-semibold">Home</a>
+                <a href="/interactions" class="text-blue-600 hover:underline font-semibold">Interaction Logs</a>
+                <a href="/models" class="text-blue-600 hover:underline font-semibold">Uploaded Models</a>
+            </nav>
         </header>
 
         @yield('content')

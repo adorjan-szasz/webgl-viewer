@@ -33,8 +33,6 @@ services:
         environment:
             MYSQL_DATABASE: webgl_viewer
             MYSQL_ROOT_PASSWORD:
-            MYSQL_USER:
-            MYSQL_PASSWORD:
         ports:
             - "3307:3306"
         volumes:

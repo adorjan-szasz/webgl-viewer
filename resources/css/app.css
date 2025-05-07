@@ -9,3 +9,32 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom component styles */
+.btn {
+    @apply inline-block px-4 py-2 text-sm font-medium rounded-md transition;
+}
+
+.btn-primary {
+    @apply text-white bg-blue-600 hover:bg-blue-700;
+}
+
+.btn-danger {
+    @apply text-white bg-red-600 hover:bg-red-700;
+}
+
+.btn-outline {
+    @apply border border-gray-300 text-gray-700 hover:bg-gray-100;
+}
+
+.btn-sm {
+    @apply px-3 py-1 text-xs;
+}
+
+.btn-lg {
+    @apply px-6 py-3 text-base;
+}

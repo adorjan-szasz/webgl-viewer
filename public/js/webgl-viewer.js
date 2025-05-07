@@ -211,7 +211,7 @@ $(document).ready(function () {
         showLoading(true);
 
         $.ajax({
-            url: '/upload-model',
+            url: '/models/upload',
             type: 'POST',
             data: formData,
             processData: false,
@@ -249,10 +249,36 @@ $(document).ready(function () {
 
             drawScene();
             gl.bindVertexArray(null);
+
+            logInteraction('load', { model_url: url });
         }, 'text').fail(function () {
             showError('Failed to load the model from the server.');
         }).always(function () {
             showLoading(false);
+        });
+    }
+
+    function logInteraction(type, data = {}) {
+        // $.ajaxSetup({
+        //     headers: {
+        //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        //     }
+        // });
+
+        $.ajax({
+            url: '/api/log-interaction',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                event_type: type,
+                event_data: data
+            }),
+            success: function () {
+                console.log('Logged:', type);
+            },
+            error: function () {
+                console.error('Failed to log interaction.');
+            }
         });
     }
 
