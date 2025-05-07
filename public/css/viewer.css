@@ -10,7 +10,7 @@ header {
     width: 100%;
     top: 0;
     left: 0;
-    height: 96px;
+    height: 78px;
     background-color: rgba(255, 255, 255, 0.9);
     z-index: 10;
     display: flex;
@@ -46,7 +46,7 @@ footer {
 
 #canvas-container {
     position: absolute;
-    top: 96px;
+    top: 120px;
     bottom: 100px;
     left: 0;
     right: 0;
@@ -57,48 +57,22 @@ canvas {
     width: 100%;
     height: 100%;
     display: block;
-    background-color: #fff;
-    border-radius: 8px;
+    background-color: #000000FF;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-#rotateBtn {
-    position: fixed;
-    top: 110px;
-    left: 20px;
-    z-index: 10;
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #10b981;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-#rotateBtn:hover {
-    background-color: #059669;
 }
 
 #uploadForm {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     position: fixed;
-    top: 110px;
-    right: 20px;
+    top: 144px;
+    right: 15px;
     background: white;
     padding: 10px 15px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-
-/*main section {*/
-/*    max-width: 720px;*/
-/*    margin: auto;*/
-/*    text-align: center;*/
-/*    padding: 20px;*/
-/*}*/
 
 #canvas-container canvas {
     outline: none;
@@ -107,4 +81,52 @@ canvas {
 .drag-hover {
     border: 2px dashed #3b82f6;
     background-color: #e0f2fe;
+}
+
+#thumbnailPreview {
+    border: 2px solid #ddd;
+    padding: 2px;
+    background: #fff;
+    object-fit: contain;
+}
+
+#loadingIndicator .spinner {
+    border: 8px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #fff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.control-panel-btn-gray {
+    padding: 0.5rem 1rem;
+    background-color: #4B5563;
+    color: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    transition: background-color 0.2s ease;
+}
+
+.control-panel-btn-gray:hover {
+    background-color: #374151;
+}
+
+.screenshot-btn {
+    padding: 0.5rem 1rem;
+    background-color: #2563EB;
+    color: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    transition: background-color 0.2s ease;
+}
+
+.screenshot-btn:hover {
+    background-color: #1D4ED8;
 }

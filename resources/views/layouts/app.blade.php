@@ -19,7 +19,7 @@
     </head>
 
     <body class="bg-gray-100 text-gray-900 font-sans">
-        <header class="fixed top-0 left-0 right-0 h-20 bg-white shadow-md flex items-center justify-between px-6 z-20">
+        <header>
             <a href="/" class="h-full flex items-center">
                 <img id="logo" src="{{ asset('assets/laravel_webgl_logo.png') }}" alt="Logo" class="max-h-full transition-all duration-300">
             </a>
@@ -28,6 +28,7 @@
                 <a href="/" class="text-blue-600 hover:underline font-semibold">Home</a>
                 <a href="/interactions" class="text-blue-600 hover:underline font-semibold">Interaction Logs</a>
                 <a href="/models" class="text-blue-600 hover:underline font-semibold">Uploaded Models</a>
+                <a href="/screenshots" class="text-blue-600 hover:underline font-semibold">My Screenshots</a>
             </nav>
         </header>
 

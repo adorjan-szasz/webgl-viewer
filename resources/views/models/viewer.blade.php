@@ -1,9 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
-    <!-- Canvas full-screen container -->
-    <div id="canvas-container" class="relative fixed top-20 bottom-16 left-0 right-0 z-10">
-        <canvas id="glcanvas" class="w-full h-full block bg-white rounded-lg shadow-inner"></canvas>
+    <!-- Left control panel -->
+    <div class="fixed top-36 bottom-0 left-4 z-30 flex flex-col space-y-4">
+        <button id="rotateBtn" class="control-panel-btn-gray">Rotate</button>
+
+        <button id="resetCameraBtn" class="control-panel-btn-gray">Reset View</button>
+
+        <button id="saveCameraBtn" class="control-panel-btn-gray">Save Camera</button>
+
+        <button id="restoreCameraBtn" class="control-panel-btn-gray">Restore Camera</button>
+
+        <div>
+            <label for="ambientSlider" class="block text-sm text-white mb-1">Ambient Light</label>
+            <input type="range" id="ambientSlider" min="0" max="1" step="0.01" value="0.3" class="w-36">
+        </div>
+
+        <button id="screenshotBtn" class="screenshot-btn">Save Screenshot</button>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="glcanvas"></canvas>
     </div>
 
     <!-- Upload form for 3D model file -->
@@ -24,19 +41,8 @@
         </button>
     </form>
 
-    <!-- Rotate button -->
-    <button id="rotateBtn" class="absolute bottom-28 left-6 z-30 px-5 py-2 bg-emerald-500 hover:bg-emerald-600
-        text-white rounded-md shadow-md"
-    >
-        Rotate
-    </button>
-
-    <!-- Error message -->
-    <div id="errorContainer" class="hidden fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-red-100 border
-        border-red-400 text-red-700 px-6 py-4 rounded shadow-md max-w-lg"
-    >
-        <p id="errorMessage" class="text-center"></p>
-    </div>
+    <!-- Toast notifications -->
+    <div id="toastWrapper" class="fixed bottom-14 right-3 z-50 flex flex-col space-y-2 items-end"></div>
 
     <!-- Loading spinner -->
     <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

@@ -2,12 +2,12 @@
 
 $(document).ready(function () {
     const canvas = document.getElementById("glcanvas");
-    const gl = canvas.getContext("webgl2");
+    const gl = canvas.getContext("webgl2", { alpha: true, preserveDrawingBuffer: true });
 
     const container = document.getElementById("canvas-container");
 
     if (!gl) {
-        showError("Unable to initialize WebGL2. WebGL2 not supported by your browser.");
+        showMessagePopUp('error', "Unable to initialize WebGL2. WebGL2 not supported by your browser.");
 
         return;
     }
@@ -15,18 +15,41 @@ $(document).ready(function () {
     // Shaders
     const vsSource = `#version 300 es
         layout(location = 0) in vec3 aVertexPosition;
+        layout(location = 1) in vec3 aNormal;
+
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
+
+        out vec3 vNormal;
+        out vec3 vLightDir;
+
         void main(void) {
-            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+            vec4 worldPosition = uModelViewMatrix * vec4(aVertexPosition, 1.0);
+            vNormal = mat3(uModelViewMatrix) * aNormal;
+            vLightDir = vec3(0.0, 0.0, 1.0);
+            gl_Position = uProjectionMatrix * worldPosition;
         }
     `;
 
     const fsSource = `#version 300 es
         precision highp float;
+
+        in vec3 vNormal;
+        in vec3 vLightDir;
+
+        uniform float uAmbientIntensity;
+
         out vec4 fragColor;
+
         void main(void) {
-            fragColor = vec4(0.2, 0.8, 0.2, 1.0);
+            vec3 normal = normalize(vNormal);
+            vec3 lightDir = normalize(vLightDir);
+
+            float diffuse = max(dot(normal, lightDir), 0.0);
+
+            float intensity = uAmbientIntensity + (1.0 - uAmbientIntensity) * diffuse;
+            vec3 baseColor = vec3(0.2, 0.8, 0.2);
+            fragColor = vec4(intensity * baseColor, 1.0);
         }
     `;
 
@@ -41,7 +64,7 @@ $(document).ready(function () {
     gl.linkProgram(shaderProgram);
 
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-        showError("Unable to initialize shader program.");
+        showMessagePopUp('error', "Unable to initialize shader program.");
 
         return;
     }
@@ -50,34 +73,65 @@ $(document).ready(function () {
 
     const uProjectionMatrix = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
     const uModelViewMatrix = gl.getUniformLocation(shaderProgram, "uModelViewMatrix");
+    const uAmbientIntensity = gl.getUniformLocation(shaderProgram, "uAmbientIntensity");
+    const uLightDirection = gl.getUniformLocation(shaderProgram, "uLightDirection");
+
+    gl.uniform3fv(uLightDirection, glMatrix.vec3.fromValues(0.0, 0.0, -1.0));
+
+    let ambientIntensity = 0.3;
+    gl.uniform1f(uAmbientIntensity, ambientIntensity);
 
     const mat4 = glMatrix.mat4;
     const projectionMatrix = mat4.create();
-
 
     let modelViewMatrix = mat4.create();
     let angle = 0;
     let vao = null;
     let currentMesh = null;
 
-    // Resize using ResizeObserver
-    const resizeObserver = new ResizeObserver(() => {
-        const rect = container.getBoundingClientRect();
+    const camera = {
+        position: [0, 0, -6],
+        rotation: [0, 0],
+        zoom: 1,
+    };
 
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+    function updateModelViewMatrix() {
+        modelViewMatrix = mat4.create();
 
-        gl.viewport(0, 0, canvas.width, canvas.height);
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, camera.position[2] * camera.zoom]);
 
-        mat4.perspective(projectionMatrix, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100);
-        gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
+        mat4.rotateX(modelViewMatrix, modelViewMatrix, camera.rotation[0]);
+        mat4.rotateY(modelViewMatrix, modelViewMatrix, camera.rotation[1]);
 
+        mat4.translate(modelViewMatrix, modelViewMatrix, [camera.position[0], camera.position[1], 0]);
+
+        gl.uniformMatrix4fv(uModelViewMatrix, false, modelViewMatrix);
+    }
+
+    $("#ambientSlider").on("input", function () {
+        ambientIntensity = parseFloat(this.value);
+        gl.uniform1f(uAmbientIntensity, ambientIntensity);
         drawScene();
     });
 
-    resizeObserver.observe(container);
 
-    // Compiling shaders
+    function drawScene() {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        updateModelViewMatrix();
+
+        gl.uniform1f(uAmbientIntensity, ambientIntensity);
+
+        if (vao) {
+            gl.bindVertexArray(vao);
+
+            const count = currentMesh?.indexCount || 36;
+
+            gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0);
+            gl.bindVertexArray(null);
+        }
+    }
+
     function loadShader(type, source) {
         const shader = gl.createShader(type);
 
@@ -85,7 +139,7 @@ $(document).ready(function () {
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            showError('Shader compile error: ' + gl.getShaderInfoLog(shader));
+            showMessagePopUp('error', 'Shader compile error: ' + gl.getShaderInfoLog(shader));
 
             gl.deleteShader(shader);
 
@@ -100,29 +154,26 @@ $(document).ready(function () {
 
     gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(uModelViewMatrix, false, modelViewMatrix);
-
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clearColor(0.1, 0.1, 0.1, 1.0);
 
-    function drawScene() {
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    const resizeObserver = new ResizeObserver(() => {
+        const rect = container.getBoundingClientRect();
 
-        mat4.identity(modelViewMatrix);
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -6]);
-        mat4.rotate(modelViewMatrix, modelViewMatrix, angle, [0, 1, 0]);
+        canvas.width = rect.width;
+        canvas.height = rect.height;
 
-        gl.uniformMatrix4fv(uModelViewMatrix, false, modelViewMatrix);
+        gl.viewport(0, 0, canvas.width, canvas.height);
 
-        if (vao) {
-            gl.bindVertexArray(vao);
+        mat4.perspective(projectionMatrix, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100);
 
-            const count = currentMesh?.indexCount || 36;
+        gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
 
-            gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0);
-            gl.bindVertexArray(null);
-        }
-    }
+        drawScene();
+    });
+
+    resizeObserver.observe(container);
 
     function createCubeVAO() {
         const positions = new Float32Array([
@@ -160,10 +211,82 @@ $(document).ready(function () {
         gl.bindVertexArray(null);
     }
 
-    $('#rotateBtn').click(() => {
-        angle += 0.1;
+    let isDragging = false;
+    let lastMouse = [0, 0];
+
+    canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastMouse = [e.clientX, e.clientY];
+    });
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('mouseleave', () => isDragging = false);
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        const dx = e.clientX - lastMouse[0];
+        const dy = e.clientY - lastMouse[1];
+
+        camera.rotation[1] += dx * 0.01;
+        camera.rotation[0] += dy * 0.01;
+        lastMouse = [e.clientX, e.clientY];
 
         drawScene();
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+
+        camera.zoom *= e.deltaY > 0 ? 1.1 : 0.9;
+
+        drawScene();
+    });
+
+    $('#rotateBtn').click(() => {
+        camera.rotation[1] += 0.1;
+
+        drawScene();
+    });
+
+    $('#resetCameraBtn').click(() => {
+        camera.position = [0, 0, -6];
+        camera.rotation = [0, 0];
+        camera.zoom = 1;
+
+        drawScene();
+    });
+
+    $('#saveCameraBtn').click(() => {
+        const state = {
+            position: camera.position,
+            rotation: camera.rotation,
+            zoom: camera.zoom
+        };
+
+        localStorage.setItem('cameraState', JSON.stringify(state));
+
+        showMessagePopUp('success', 'Camera state saved.');
+    });
+
+    $('#restoreCameraBtn').click(() => {
+        const stateJSON = localStorage.getItem('cameraState');
+
+        if (!stateJSON) {
+            showMessagePopUp('error', 'No saved camera state found.');
+
+            return;
+        }
+
+        try {
+            const state = JSON.parse(stateJSON);
+
+            camera.position = state.position || [0, 0, -6];
+            camera.rotation = state.rotation || [0, 0];
+            camera.zoom = state.zoom || 1;
+
+            drawScene();
+        } catch (e) {
+            showMessagePopUp('error', 'Failed to restore camera state.');
+        }
     });
 
     $('#uploadForm').on('dragover dragenter', e => {
@@ -193,7 +316,7 @@ $(document).ready(function () {
         const fileInput = $('#modelFile')[0];
 
         if (!fileInput.files.length) {
-            showError('Please select a .obj file.');
+            showMessagePopUp('error', 'Please select a .obj file.');
 
             return;
         }
@@ -203,9 +326,7 @@ $(document).ready(function () {
         formData.append('model_file', fileInput.files[0]);
 
         $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
         });
 
         showLoading(true);
@@ -220,7 +341,7 @@ $(document).ready(function () {
                 loadOBJModel(response.path);
             },
             error: function (e) {
-                showError('Upload failed: ' + (e.responseJSON?.message || 'Unknown error'));
+                showMessagePopUp('error', 'Upload failed: ' + (e.responseJSON?.message || 'Unknown error'));
             },
             complete: function () {
                 showLoading(false);
@@ -245,26 +366,24 @@ $(document).ready(function () {
             gl.enableVertexAttribArray(0);
             gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
 
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normalBuffer);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
 
-            drawScene();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
             gl.bindVertexArray(null);
 
+            drawScene();
+
             logInteraction('load', { model_url: url });
-        }, 'text').fail(function () {
-            showError('Failed to load the model from the server.');
-        }).always(function () {
+        }, 'text').fail(() => {
+            showMessagePopUp('error', 'Failed to load the model from the server.');
+        }).always(() => {
             showLoading(false);
         });
     }
 
     function logInteraction(type, data = {}) {
-        // $.ajaxSetup({
-        //     headers: {
-        //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        //     }
-        // });
-
         $.ajax({
             url: '/api/log-interaction',
             method: 'POST',
@@ -273,26 +392,101 @@ $(document).ready(function () {
                 event_type: type,
                 event_data: data
             }),
-            success: function () {
-                console.log('Logged:', type);
+            success: () => console.log('Logged:', type),
+            error: () => console.error('Failed to log interaction.')
+        });
+    }
+
+    $('#screenshotBtn').click(() => {
+        const dataURL = canvas.toDataURL("image/png");
+        const blob = dataURLtoBlob(dataURL);
+
+        const formData = new FormData();
+
+        formData.append("screenshot", blob, "screenshot.png");
+
+        $.ajaxSetup({
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+        });
+
+        showLoading(true);
+
+        $.ajax({
+            url: '/save-screenshot',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                showMessagePopUp('success', 'Screenshot uploaded!');
             },
-            error: function () {
-                console.error('Failed to log interaction.');
+            error: function (e) {
+                showMessagePopUp('error', 'Upload failed: ' + (e.responseJSON?.message || 'Unknown error'));
+            },
+            complete: function () {
+                showLoading(false);
             }
         });
+    });
+
+    function dataURLtoBlob(dataURL) {
+        const byteString = atob(dataURL.split(',')[1]);
+        const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+
+        const buffer = new ArrayBuffer(byteString.length);
+        const intArray = new Uint8Array(buffer);
+
+        for (let i = 0; i < byteString.length; i++) {
+            intArray[i] = byteString.charCodeAt(i);
+        }
+
+        return new Blob([buffer], { type: mimeString });
     }
 
     function showLoading(show) {
         $('#loadingIndicator').toggleClass('hidden', !show);
     }
 
-    function showError(message) {
-        $('#errorMessage').text(message);
-        $('#errorContainer').removeClass('hidden');
-        setTimeout(() => $('#errorContainer').addClass('hidden'), 5000);
+    function showToast(type, message) {
+        const bgColor = type === 'success' ? 'bg-green-100 border-green-400 text-green-800' :
+            'bg-red-100 border-red-400 text-red-800';
+
+        const toast = $(`
+            <div class="toast-message ${bgColor} border px-4 py-3 rounded shadow max-w-xs relative opacity-0 translate-x-4 transition-all duration-300">
+                <button class="absolute top-1 right-1 text-lg text-gray-500 hover:text-gray-800 font-bold leading-none focus:outline-none">&times;</button>
+                <p class="pr-6">${message}</p>
+            </div>
+        `);
+
+        $('#toastWrapper').append(toast);
+
+        requestAnimationFrame(() => {
+            toast.removeClass('opacity-0 translate-x-4');
+        });
+
+        toast.find('button').on('click', () => {
+            toast.addClass('opacity-0 translate-x-4');
+            setTimeout(() => toast.remove(), 300);
+        });
+
+        setTimeout(() => {
+            toast.addClass('opacity-0 translate-x-4');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
     }
+
+    function showMessagePopUp(type, message) {
+        showToast(type, message);
+    }
+
+    // Initialize
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
+
+    mat4.perspective(projectionMatrix, 45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 100);
+    gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
 
     createCubeVAO();
     drawScene();
 });
-

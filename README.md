@@ -1,61 +1,139 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+<p align="left">
+    <img src="public/assets/laravel_webgl_logo.png" width="128" alt="Laravel_WebGL2_3D_Model_Viewer_Logo">
 </p>
 
-## About Laravel
+# Laravel WebGL2 3D Model Viewer
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### A clean, lightweight WebGL2 project to upload, view, and interact with `.obj` 3D models directly in the browser built with **Laravel 12.12**, **PHP 8.3**, and **jQuery**, running inside **Docker**. Includes zoom, rotate, lighting, camera memory, screenshots, screenshot gallery and more!
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Upload and render `.obj` 3D models  
+- Zoom and rotate with mouse interactions  
+- Center and scale models to fit the view automatically  
+- Lighting
+- Persistent camera memory using `localStorage` (restores last view on reload)
+- Capture and download WebGL2 screenshots
+- Flash messages and upload validation
+- Dockerized for cross-platform compatibility (Windows/macOS/Linux)
 
-## Learning Laravel
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Technology Stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| Layer        | Tech                                         |
+| ------------ |----------------------------------------------|
+| Backend      | Laravel 12.12 (PHP 8.3)                      |
+| Frontend     | HTML5 + jQuery + WebGL2 (via raw WebGL API)  |
+| Rendering    | GLSL shaders (vertex & fragment), OBJ parser |
+| Build/Deploy | Docker (PHP-FPM, Nginx, MySQL)               |
+| Storage      | Laravel's `public` disk (symlinked)          |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
+## Prerequisites
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- **Docker Desktop** (Windows/macOS) OR Docker Engine (Linux)
+- (Optional) Git & Composer (for manual work outside Docker)
 
-### Premium Partners
+## Setup: Run via Docker
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+**Clone the repo:**
 
-## Contributing
+```bash
+git clone https://github.com/adorjan-szasz/webgl-viewer.git
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+cd webgl-viewer
+```
 
-## Code of Conduct
+#### Set up environment:
+```bash
+cp .env.example .env
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+APP_NAME=webgl_viewer
+APP_ENV=local
 
-## Security Vulnerabilities
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=webgl_viewer
+DB_USERNAME=
+DB_PASSWORD=
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
 
-## License
+FILESYSTEM_DRIVER=public
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### Start containerized environment:
+```bash
+docker-compose up -d --build
+```
+#### Enter container
+
+```bash
+docker exec -it laravel_app bash
+```
+
+#### Install Laravel & generate key & run migrations inside container:
+
+```bash
+composer install
+php artisan key:generate
+php artisan migrate
+```
+
+#### Create storage symlink:
+```bash
+chmod -R 775 storage/app/public/models
+chown -R www-data:www-data storage/app/public/models
+
+chmod -R 775 storage/app/public/screenshots
+chown -R www-data:www-data storage/app/public/screenshots
+
+php artisan storage:link
+```
+
+#### Visit the app at: http://localhost:8000
+
+## Usage
+
+### Upload a Model
+
+Click "Choose File" and select a .obj file
+
+Click "Upload"
+
+Your model will be centered, scaled and displayed.
+
+### Interactions
+
+- Rotate: Left-click & drag
+- Zoom: Scroll wheel
+- Reset View: Click the "Reset Camera" button
+
+### Memory
+
+#### Your camera view (zoom, rotation) is saved and restored between reloads.
+
+### Screenshots
+
+- Browse uploaded screenshots 
+- Download or delete images
+
+### Notes
+.obj files should include normals (vn) and faces in f v//vn format.
+
+Uploaded models are stored in storage/app/public/models/ and accessible at /storage/models/....
+
+## Author
+### Made by Adorján Szász
+#### Feel free to fork, modify, or build upon this mini-project.
+
+### License
+#### MIT – Free to use and modify.
+
+
+

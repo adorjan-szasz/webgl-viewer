@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="relative overflow-y-auto max-h-[calc(100vh-4rem)] px-4 py-6 mt-16">
-        <h1 class="mt-8 mb-4">Uploaded 3D Models</h1>
+        <h1 class="mt-8 mb-4 text-2xl font-semibold">Uploaded 3D Models</h1>
 
         <x-button variant="danger" id="delete-all-models" extras="mb-4">Delete All Models</x-button>
 

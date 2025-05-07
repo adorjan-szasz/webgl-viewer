@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="relative overflow-y-auto max-h-[calc(100vh-4rem)] px-4 py-6 mt-16">
-        <h1 class="mt-8 mb-4">WebGL Interaction History</h1>
+        <h1 class="mt-8 mb-4 text-2xl font-semibold">WebGL Interaction History</h1>
 
         <div>
             <x-button variant="danger" id="clear-all-interactions" extras="mb-2">
