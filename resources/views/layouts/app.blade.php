@@ -12,10 +12,9 @@
         <!-- Tailwind CSS -->
         <script src="https://cdn.tailwindcss.com"></script>
 
-        <!-- WebGL + OBJ loader -->
-        <script src="https://cdn.jsdelivr.net/npm/webgl-obj-loader@2.0.3/dist/webgl-obj-loader.min.js"></script>
-
         <link rel="stylesheet" href="{{ asset('css/viewer.css') }}">
+
+        @yield('header-content')
     </head>
 
     <body class="bg-gray-100 text-gray-900 font-sans">
@@ -25,7 +24,8 @@
             </a>
 
             <nav class="space-x-4">
-                <a href="/" class="text-blue-600 hover:underline font-semibold">Home</a>
+                <a href="/" class="text-blue-600 hover:underline font-semibold">Home (WebGL2)</a>
+                <a href="/three-viewer" class="text-blue-600 hover:underline font-semibold">ThreeJS Scene</a>
                 <a href="/interactions" class="text-blue-600 hover:underline font-semibold">Interaction Logs</a>
                 <a href="/models" class="text-blue-600 hover:underline font-semibold">Uploaded Models</a>
                 <a href="/screenshots" class="text-blue-600 hover:underline font-semibold">My Screenshots</a>

@@ -1,8 +1,15 @@
 @extends('layouts.app')
 
+@section('header-content')
+    <!-- WebGL + OBJ loader -->
+    <script src="https://cdn.jsdelivr.net/npm/webgl-obj-loader@2.0.3/dist/webgl-obj-loader.min.js"></script>
+@endsection
+
 @section('content')
     <!-- Left control panel -->
     <div class="fixed top-36 bottom-0 left-4 z-30 flex flex-col space-y-4">
+        @include('components.model-selector')
+
         <button id="rotateBtn" class="control-panel-btn-gray">Rotate</button>
 
         <button id="resetCameraBtn" class="control-panel-btn-gray">Reset View</button>
@@ -41,15 +48,12 @@
         </button>
     </form>
 
-    <!-- Toast notifications -->
-    <div id="toastWrapper" class="fixed bottom-14 right-3 z-50 flex flex-col space-y-2 items-end"></div>
+    @include('components.toast-notifications')
 
-    <!-- Loading spinner -->
-    <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-white border-opacity-75"></div>
-    </div>
+    @include('components.loading-spinner')
 
     <script defer src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/gl-matrix-min.js"></script>
+    <script src="{{ asset('js/common/helper.js') }}"></script>
     <script defer type="module" src="{{ asset('js/webgl-viewer.js') }}"></script>
 @endsection

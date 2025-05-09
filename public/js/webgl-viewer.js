@@ -7,7 +7,7 @@ $(document).ready(function () {
     const container = document.getElementById("canvas-container");
 
     if (!gl) {
-        showMessagePopUp('error', "Unable to initialize WebGL2. WebGL2 not supported by your browser.");
+        helpers.showToast("Unable to initialize WebGL2. WebGL2 not supported by your browser.", 'error');
 
         return;
     }
@@ -64,7 +64,7 @@ $(document).ready(function () {
     gl.linkProgram(shaderProgram);
 
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-        showMessagePopUp('error', "Unable to initialize shader program.");
+        helpers.showToast("Unable to initialize shader program.", 'error');
 
         return;
     }
@@ -85,7 +85,6 @@ $(document).ready(function () {
     const projectionMatrix = mat4.create();
 
     let modelViewMatrix = mat4.create();
-    let angle = 0;
     let vao = null;
     let currentMesh = null;
 
@@ -139,7 +138,7 @@ $(document).ready(function () {
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            showMessagePopUp('error', 'Shader compile error: ' + gl.getShaderInfoLog(shader));
+            helpers.showToast('Shader compile error: ' + gl.getShaderInfoLog(shader), 'error');
 
             gl.deleteShader(shader);
 
@@ -264,14 +263,14 @@ $(document).ready(function () {
 
         localStorage.setItem('cameraState', JSON.stringify(state));
 
-        showMessagePopUp('success', 'Camera state saved.');
+        helpers.showToast('Camera state saved.');
     });
 
     $('#restoreCameraBtn').click(() => {
         const stateJSON = localStorage.getItem('cameraState');
 
         if (!stateJSON) {
-            showMessagePopUp('error', 'No saved camera state found.');
+            helpers.showToast('No saved camera state found.', 'error');
 
             return;
         }
@@ -285,7 +284,7 @@ $(document).ready(function () {
 
             drawScene();
         } catch (e) {
-            showMessagePopUp('error', 'Failed to restore camera state.');
+            helpers.showToast('Failed to restore camera state.', 'error');
         }
     });
 
@@ -316,7 +315,7 @@ $(document).ready(function () {
         const fileInput = $('#modelFile')[0];
 
         if (!fileInput.files.length) {
-            showMessagePopUp('error', 'Please select a .obj file.');
+            helpers.showToast('Please select a .obj file.', 'error');
 
             return;
         }
@@ -338,10 +337,19 @@ $(document).ready(function () {
             processData: false,
             contentType: false,
             success: function (response) {
-                loadOBJModel(response.path);
+                const model = response.model;
+                const option = $('<option>')
+                    .val(model.id)
+                    .text(model.name)
+                    .attr('data-files', JSON.stringify(model.files))
+                    .prop('selected', true);
+
+                $('#modelSelector').append(option).trigger('change');
+
+                helpers.showToast('Upload successful!');
             },
             error: function (e) {
-                showMessagePopUp('error', 'Upload failed: ' + (e.responseJSON?.message || 'Unknown error'));
+                helpers.showToast('Upload failed: ' + (e.responseJSON?.message || 'Unknown error'), 'error');
             },
             complete: function () {
                 showLoading(false);
@@ -377,7 +385,7 @@ $(document).ready(function () {
 
             logInteraction('load', { model_url: url });
         }, 'text').fail(() => {
-            showMessagePopUp('error', 'Failed to load the model from the server.');
+            helpers.showToast('Failed to load the model from the server.', 'error');
         }).always(() => {
             showLoading(false);
         });
@@ -392,8 +400,6 @@ $(document).ready(function () {
                 event_type: type,
                 event_data: data
             }),
-            success: () => console.log('Logged:', type),
-            error: () => console.error('Failed to log interaction.')
         });
     }
 
@@ -418,10 +424,10 @@ $(document).ready(function () {
             processData: false,
             contentType: false,
             success: function (response) {
-                showMessagePopUp('success', 'Screenshot uploaded!');
+                helpers.showToast('Screenshot uploaded!');
             },
             error: function (e) {
-                showMessagePopUp('error', 'Upload failed: ' + (e.responseJSON?.message || 'Unknown error'));
+                helpers.showToast('Upload failed: ' + (e.responseJSON?.message || 'Unknown error'), 'error');
             },
             complete: function () {
                 showLoading(false);
@@ -443,40 +449,19 @@ $(document).ready(function () {
         return new Blob([buffer], { type: mimeString });
     }
 
+    $('#modelSelector').on('change', function (e) {
+        const selected = e.target.selectedOptions[0];
+
+        if (!selected) return;
+
+        const file = JSON.parse(selected.dataset.files || null);
+        const path = '/storage/models/' + file[0];
+
+        loadOBJModel(path);
+    });
+
     function showLoading(show) {
         $('#loadingIndicator').toggleClass('hidden', !show);
-    }
-
-    function showToast(type, message) {
-        const bgColor = type === 'success' ? 'bg-green-100 border-green-400 text-green-800' :
-            'bg-red-100 border-red-400 text-red-800';
-
-        const toast = $(`
-            <div class="toast-message ${bgColor} border px-4 py-3 rounded shadow max-w-xs relative opacity-0 translate-x-4 transition-all duration-300">
-                <button class="absolute top-1 right-1 text-lg text-gray-500 hover:text-gray-800 font-bold leading-none focus:outline-none">&times;</button>
-                <p class="pr-6">${message}</p>
-            </div>
-        `);
-
-        $('#toastWrapper').append(toast);
-
-        requestAnimationFrame(() => {
-            toast.removeClass('opacity-0 translate-x-4');
-        });
-
-        toast.find('button').on('click', () => {
-            toast.addClass('opacity-0 translate-x-4');
-            setTimeout(() => toast.remove(), 300);
-        });
-
-        setTimeout(() => {
-            toast.addClass('opacity-0 translate-x-4');
-            setTimeout(() => toast.remove(), 300);
-        }, 4000);
-    }
-
-    function showMessagePopUp(type, message) {
-        showToast(type, message);
     }
 
     // Initialize

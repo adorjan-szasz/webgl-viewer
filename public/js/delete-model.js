@@ -3,10 +3,11 @@
 $(document).ready(function () {
     $('.delete-model').on('click', function () {
         const filename = $(this).data('filename');
+        const modelID = $(this).data('model-id');
 
         if (confirm(`Delete "${filename}"? This action cannot be undone.`)) {
             $.ajax({
-                url: `/models/${encodeURIComponent(filename)}`,
+                url: `/models/${encodeURIComponent(modelID)}`,
                 type: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

@@ -6,24 +6,42 @@
 
         <x-button variant="danger" id="delete-all-models" extras="mb-4">Delete All Models</x-button>
 
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-gray-400 shadow-md rounded-lg overflow-hidden text-sm">
+            <thead class="bg-gray-300">
             <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model File</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase">Model Name</th>
+                <th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase">Model Files</th>
+                <th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase">Last Modified</th>
+                <th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase">Actions</th>
             </tr>
             </thead>
 
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-white divide-y divide-gray-400">
             @foreach ($models as $model)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $model['name'] }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ date('Y-m-d H:i:s', $model['modified']) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <x-link-button href="{{ $model['url'] }}" target="_blank">View</x-link-button>
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 text-gray-900 font-medium">{{ $model->name }}</td>
 
-                        <x-button variant="danger" data-filename="{{ $model['name'] }}" extras="delete-model">Delete</x-button>
+                    <td class="px-6 py-4 text-gray-800">
+                        <ul class="space-y-1">
+                            @foreach ($model->files as $file)
+                                <li>
+                                    <a href="{{ asset('storage/models/' . $file) }}" target="_blank" class="text-blue-600 hover:underline">
+                                        {{ $file }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </td>
+
+                    <td class="px-6 py-4 text-gray-600">{{ $model->updated_at->format('Y-m-d H:i:s') }}</td>
+
+                    <td class="px-6 py-4 space-x-2">
+                        <x-button variant="danger"
+                                  data-filename="{{ $model->name }}"
+                                  extras="delete-model"
+                                  data-model-id="{{ $model->id }}">
+                            Delete
+                        </x-button>
                     </td>
                 </tr>
             @endforeach

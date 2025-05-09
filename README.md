@@ -87,6 +87,9 @@ php artisan migrate
 
 #### Create storage symlink:
 ```bash
+mkdir -p storage/app/public/models
+mkdir -p storage/app/public/screenshots
+
 chmod -R 775 storage/app/public/models
 chown -R www-data:www-data storage/app/public/models
 
@@ -97,6 +100,18 @@ php artisan storage:link
 ```
 
 #### Visit the app at: http://localhost:8000
+
+
+## Difference between raw WebGL2 and Three.js
+
+| Feature               | Raw WebGL2                                     | Three.js                                                  |
+|-----------------------|------------------------------------------------|-----------------------------------------------------------|
+| Abstraction level     | Very low-level, verbose API                    | High-level, user-friendly abstraction over WebGL          |
+| Ease of use           | Steep learning curve                           | Easier with built-in objects, loaders, controls, lighting |
+| Scene graph           | You have to build everything manually          | Comes with scene management, object hierarchy, etc.       |
+| Built-in loaders      | None                                           | Yes (OBJ, GLTF, textures, etc.)                           |
+| Animations & lighting | You write all shaders and matrix math yourself | Comes with default materials, lights, shadows             |
+| Best for              | Fine-grained GPU control                       | Rapid 3D prototyping, games, architecture, visualization  |
 
 ## Usage
 
