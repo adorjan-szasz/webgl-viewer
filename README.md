@@ -2,9 +2,13 @@
     <img src="public/assets/laravel_webgl_logo.png" width="128" alt="Laravel_WebGL2_3D_Model_Viewer_Logo">
 </p>
 
-# Laravel WebGL2 3D Model Viewer
+<p align="left">
+    <img src="public/assets/laravel_webgl_logo_v2.png" width="128" alt="Laravel_WebGL2_ThreeJS__Logo">
+</p>
 
-### A clean, lightweight WebGL2 project to upload, view, and interact with `.obj` 3D models directly in the browser built with **Laravel 12.12**, **PHP 8.3**, and **jQuery**, running inside **Docker**. Includes zoom, rotate, lighting, camera memory, screenshots, screenshot gallery and more!
+# Laravel WebGL2 + Three.js 3D Model Viewer
+
+### A clean, lightweight WebGL2/Three.js project to upload, view, and interact with `.obj`, `mtl`, `gltf`, `glb`, `dae` 3D models directly in the browser built with **Laravel 12.12**, **PHP 8.3**, and **jQuery**, running inside **Docker**. WebGL2 includes zoom, rotate, lighting, camera memory, screenshots, screenshot gallery and more!
 
 ## Features
 
@@ -20,13 +24,13 @@
 
 ## Technology Stack
 
-| Layer        | Tech                                         |
-| ------------ |----------------------------------------------|
-| Backend      | Laravel 12.12 (PHP 8.3)                      |
-| Frontend     | HTML5 + jQuery + WebGL2 (via raw WebGL API)  |
-| Rendering    | GLSL shaders (vertex & fragment), OBJ parser |
-| Build/Deploy | Docker (PHP-FPM, Nginx, MySQL)               |
-| Storage      | Laravel's `public` disk (symlinked)          |
+| Layer        | Tech                                                  |
+| ------------ |-------------------------------------------------------|
+| Backend      | Laravel 12.12 (PHP 8.3)                               |
+| Frontend     | HTML5 + jQuery + WebGL2 (via raw WebGL API) + ThreeJs |
+| Rendering    | GLSL shaders (vertex & fragment), OBJ parser          |
+| Build/Deploy | Docker (PHP-FPM, Nginx, MySQL)                        |
+| Storage      | Laravel's `public` disk (symlinked)                   |
 
 
 ## Prerequisites
@@ -115,13 +119,20 @@ php artisan storage:link
 
 ## Usage
 
-### Upload a Model
+### Upload a Model (WebGL2)
 
-Click "Choose File" and select a .obj file
+Click "Choose File" and select a .obj file. Drag&Drop works too!
 
-Click "Upload"
+Click "Upload".
 
 Your model will be centered, scaled and displayed.
+
+### Upload Model(s) (ThreeJS)
+Click "Choose File" and select one or more supported files. Drag&Drop also works!
+
+Click "Upload".
+
+Your model will be displayed.
 
 ### Interactions
 
@@ -129,11 +140,13 @@ Your model will be centered, scaled and displayed.
 - Zoom: Scroll wheel
 - Reset View: Click the "Reset Camera" button
 
-### Memory
+- Select models from already uploaded files
+
+### Memory (implemented for WebGL2 for now)
 
 #### Your camera view (zoom, rotation) is saved and restored between reloads.
 
-### Screenshots
+### Screenshots (implemented for WebGL2 for now)
 
 - Browse uploaded screenshots 
 - Download or delete images

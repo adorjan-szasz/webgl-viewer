@@ -20,7 +20,7 @@
     <body class="bg-gray-100 text-gray-900 font-sans">
         <header>
             <a href="/" class="h-full flex items-center">
-                <img id="logo" src="{{ asset('assets/laravel_webgl_logo.png') }}" alt="Logo" class="max-h-full transition-all duration-300">
+                <img id="logo" src="{{ asset('assets/laravel_webgl_logo_v2.png') }}" alt="Logo" class="max-h-full transition-all duration-300">
             </a>
 
             <nav class="space-x-4">
