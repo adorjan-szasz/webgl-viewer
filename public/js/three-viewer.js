@@ -37,6 +37,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentModel;
 
+    function centerAndFitModel(model) {
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+
+        model.position.sub(center);
+
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fov = camera.fov * (Math.PI / 180);
+        const cameraZ = maxDim / (2 * Math.tan(fov / 2));
+
+        camera.position.set(0, 0, cameraZ * 1.5);
+        controls.target.set(0, 0, 0);
+        controls.update();
+    }
+
     function loadModel(files) {
         return new Promise((resolve, reject) => {
             showLoader();
@@ -48,6 +64,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const basePath = '/storage/models/';
             const fileMap = Object.fromEntries(files.map(f => [f.split('.').pop().toLowerCase(), f]));
+
+            const onSuccess = (model) => {
+                currentModel = model;
+                scene.add(model);
+
+                centerAndFitModel(model);
+                hideLoader();
+
+                resolve();
+            };
+
+            const onError = (msg, err) => {
+                hideLoader();
+                helpers.showToast(msg, 'error');
+
+                reject(err);
+            };
 
             try {
                 if (fileMap.obj) {
@@ -63,78 +96,28 @@ document.addEventListener('DOMContentLoaded', () => {
                             objLoader.setMaterials(materials);
                             objLoader.setPath(basePath);
 
-                            objLoader.load(fileMap.obj, (obj) => {
-                                currentModel = obj;
-                                scene.add(obj);
-
-                                hideLoader();
-                                resolve();
-                            }, undefined, (err) => {
-                                hideLoader();
-                                helpers.showToast('Failed to load OBJ model', 'error');
-                                reject(err);
-                            });
-                        }, undefined, (err) => {
-                            hideLoader();
-                            helpers.showToast('Failed to load MTL material', 'error');
-                            reject(err);
-                        });
+                            objLoader.load(fileMap.obj, onSuccess, undefined, (err) =>  onError('Failed to load OBJ model', err));
+                        }, undefined, (err) => onError('Failed to load MTL material', err));
                     } else {
                         const objLoader = new OBJLoader();
 
                         objLoader.setPath(basePath);
 
-                        objLoader.load(fileMap.obj, (obj) => {
-                            currentModel = obj;
-                            scene.add(obj);
-
-                            hideLoader();
-                            resolve();
-                        }, undefined, (err) => {
-                            hideLoader();
-                            helpers.showToast('Failed to load OBJ model', 'error');
-                            reject(err);
-                        });
+                        objLoader.load(fileMap.obj, onSuccess, undefined, (err) => onError('Failed to load OBJ model', err));
                     }
                 } else if (fileMap.gltf || fileMap.glb) {
                     const loader = new GLTFLoader();
 
-                    loader.load(basePath + (fileMap.gltf || fileMap.glb), (gltf) => {
-                        currentModel = gltf.scene;
-                        scene.add(gltf.scene);
-
-                        hideLoader();
-                        resolve();
-                    }, undefined, (err) => {
-                        hideLoader();
-                        helpers.showToast('Failed to load GLTF/GLB model', 'error');
-                        reject(err);
-                    });
+                    loader.load(basePath + (fileMap.gltf || fileMap.glb), (gltf) => onSuccess(gltf.scene), undefined, (err) => onError('Failed to load GLTF/GLB model', err));
                 } else if (fileMap.dae) {
                     const loader = new ColladaLoader();
 
-                    loader.load(basePath + fileMap.dae, (dae) => {
-                        currentModel = dae.scene;
-                        scene.add(dae.scene);
-
-                        hideLoader();
-                        resolve();
-                    }, undefined, (err) => {
-                        hideLoader();
-                        helpers.showToast('Failed to load DAE model', 'error');
-                        reject(err);
-                    });
+                    loader.load(basePath + fileMap.dae, (dae) => onSuccess(dae.scene), undefined, (err) => onError('Failed to load DAE model', err));
                 } else {
-                    hideLoader();
-                    const message = 'No supported 3D file format found';
-
-                    helpers.showToast(message, 'error');
-                    reject(message);
+                    onError('No supported 3D file format found', 'error')
                 }
             } catch (err) {
-                hideLoader();
-                helpers.showToast('Unexpected error while loading model', 'error');
-                reject(err);
+                onError('Unexpected error while loading model', err);
             }
         });
     }
