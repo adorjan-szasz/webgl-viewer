@@ -18,7 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     camera.position.set(0, 2, 5);
 
-    const renderer = new THREE.WebGLRenderer({ canvas });
+    const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        alpha: true,
+        preserveDrawingBuffer: true
+    });
 
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
@@ -32,6 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     scene.add(light);
     scene.add(new THREE.DirectionalLight(0xffffff, 1));
+
+    $('#ambientSlider').on('input', function () {
+        light.intensity = parseFloat(this.value);
+    });
 
     const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -55,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadModel(files) {
         return new Promise((resolve, reject) => {
-            showLoader();
+            helpers.showLoader(true);
 
             if (currentModel) {
                 scene.remove(currentModel);
@@ -70,13 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 scene.add(model);
 
                 centerAndFitModel(model);
-                hideLoader();
+                helpers.showLoader(false);
 
                 resolve();
             };
 
             const onError = (msg, err) => {
-                hideLoader();
+                helpers.showLoader(false);
                 helpers.showToast(msg, 'error');
 
                 reject(err);
@@ -195,13 +203,19 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(() => {});
     });
 
-    function showLoader() {
-        $('#loadingIndicator').removeClass('hidden');
-    }
+    $('#resetCameraBtn').on('click', () => {
+        if (currentModel) {
+            centerAndFitModel(currentModel);
 
-    function hideLoader() {
-        $('#loadingIndicator').addClass('hidden');
-    }
+            helpers.showToast('View reset.');
+        } else {
+            helpers.showToast('No model loaded to reset view.', 'error');
+        }
+    });
+
+    $('#screenshotBtn').click(() => {
+        helpers.saveScreenshot(canvas);
+    });
 
     function animate() {
         requestAnimationFrame(animate);

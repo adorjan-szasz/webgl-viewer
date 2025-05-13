@@ -328,7 +328,7 @@ $(document).ready(function () {
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
         });
 
-        showLoading(true);
+        helpers.showLoader(true);
 
         $.ajax({
             url: '/models/upload',
@@ -352,13 +352,13 @@ $(document).ready(function () {
                 helpers.showToast('Upload failed: ' + (e.responseJSON?.message || 'Unknown error'), 'error');
             },
             complete: function () {
-                showLoading(false);
+                helpers.showLoader(false);
             }
         });
     });
 
     function loadOBJModel(url) {
-        showLoading(true);
+        helpers.showLoader(true);
 
         $.get(url, function (data) {
             const mesh = new OBJ.Mesh(data);
@@ -387,7 +387,7 @@ $(document).ready(function () {
         }, 'text').fail(() => {
             helpers.showToast('Failed to load the model from the server.', 'error');
         }).always(() => {
-            showLoading(false);
+            helpers.showLoader(false);
         });
     }
 
@@ -404,50 +404,8 @@ $(document).ready(function () {
     }
 
     $('#screenshotBtn').click(() => {
-        const dataURL = canvas.toDataURL("image/png");
-        const blob = dataURLtoBlob(dataURL);
-
-        const formData = new FormData();
-
-        formData.append("screenshot", blob, "screenshot.png");
-
-        $.ajaxSetup({
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
-        });
-
-        showLoading(true);
-
-        $.ajax({
-            url: '/save-screenshot',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                helpers.showToast('Screenshot uploaded!');
-            },
-            error: function (e) {
-                helpers.showToast('Upload failed: ' + (e.responseJSON?.message || 'Unknown error'), 'error');
-            },
-            complete: function () {
-                showLoading(false);
-            }
-        });
+        helpers.saveScreenshot(canvas);
     });
-
-    function dataURLtoBlob(dataURL) {
-        const byteString = atob(dataURL.split(',')[1]);
-        const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-
-        const buffer = new ArrayBuffer(byteString.length);
-        const intArray = new Uint8Array(buffer);
-
-        for (let i = 0; i < byteString.length; i++) {
-            intArray[i] = byteString.charCodeAt(i);
-        }
-
-        return new Blob([buffer], { type: mimeString });
-    }
 
     $('#modelSelector').on('change', function (e) {
         const selected = e.target.selectedOptions[0];
@@ -459,10 +417,6 @@ $(document).ready(function () {
 
         loadOBJModel(path);
     });
-
-    function showLoading(show) {
-        $('#loadingIndicator').toggleClass('hidden', !show);
-    }
 
     // Initialize
     gl.enable(gl.DEPTH_TEST);

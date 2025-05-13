@@ -18,12 +18,12 @@
 
         <button id="restoreCameraBtn" class="control-panel-btn-gray">Restore Camera</button>
 
-        <div>
-            <label for="ambientSlider" class="block text-sm text-white mb-1">Ambient Light</label>
-            <input type="range" id="ambientSlider" min="0" max="1" step="0.01" value="0.3" class="w-36">
-        </div>
-
         <button id="screenshotBtn" class="screenshot-btn">Save Screenshot</button>
+
+        <div>
+            <label for="ambientSlider" class="block text-sm text-white text-center mb-1">Ambient Light</label>
+            <input type="range" id="ambientSlider" min="0" max="1" step="0.01" value="0.3" class="w-52">
+        </div>
     </div>
 
     <div id="canvas-container">

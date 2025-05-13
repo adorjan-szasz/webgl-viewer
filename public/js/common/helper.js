@@ -1,3 +1,5 @@
+/* global $ */
+
 const helpers = (function () {
     const _helpers = {};
 
@@ -30,5 +32,52 @@ const helpers = (function () {
         }, 4000);
     };
 
+    _helpers.showLoader = function (show) {
+        $('#loadingIndicator').toggleClass('hidden', !show);
+    }
+
+    _helpers.saveScreenshot = function (canvas) {
+        const dataURL = canvas.toDataURL("image/png");
+        const blob = dataURLtoBlob(dataURL);
+
+        const formData = new FormData();
+
+        formData.append("screenshot", blob, "screenshot.png");
+
+        helpers.showLoader(true);
+
+        $.ajax({
+            url: '/save-screenshot',
+            type: 'POST',
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                helpers.showToast('Screenshot saved!');
+            },
+            error: function (e) {
+                helpers.showToast('Failed to save screenshot: ' + (e.responseJSON?.message || 'Unknown error'), 'error');
+            },
+            complete: function () {
+                helpers.showLoader(false);
+            }
+        });
+    }
+
     return _helpers;
 })();
+
+function dataURLtoBlob(dataURL) {
+    const byteString = atob(dataURL.split(',')[1]);
+    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+
+    const buffer = new ArrayBuffer(byteString.length);
+    const intArray = new Uint8Array(buffer);
+
+    for (let i = 0; i < byteString.length; i++) {
+        intArray[i] = byteString.charCodeAt(i);
+    }
+
+    return new Blob([buffer], { type: mimeString });
+}

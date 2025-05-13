@@ -15,6 +15,15 @@
     <!-- Left control panel -->
     <div class="fixed top-36 bottom-0 left-4 z-30 flex flex-col space-y-4">
         @include('components.model-selector')
+
+        <button id="resetCameraBtn" class="control-panel-btn-gray">Reset View</button>
+
+        <button id="screenshotBtn" class="screenshot-btn">Save Screenshot</button>
+
+        <div>
+            <label for="ambientSlider" class="block text-sm text-white text-center mb-1">Ambient Light</label>
+            <input type="range" id="ambientSlider" min="0" max="1" step="0.01" value="0.8" class="w-52">
+        </div>
     </div>
 
     <!-- 3D Canvas -->
