@@ -45,6 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentModel;
 
+    let rotatingToRight = false;
+    let rotatingToLeft = false;
+
     function centerAndFitModel(model) {
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
@@ -217,8 +220,46 @@ document.addEventListener('DOMContentLoaded', () => {
         helpers.saveScreenshot(canvas);
     });
 
+    function rotateModelOnce(direction = 1) {
+        if (currentModel) {
+            currentModel.rotation.z += direction * Math.PI / 18;
+
+            renderer.render(scene, camera);
+        }
+    }
+
+    $('#rotateOnceLeft').on('click', () => rotateModelOnce(-1));
+    $('#rotateOnceRight').on('click', () => rotateModelOnce(1));
+
+    $('#rotateToRight').on('click', function () {
+        const isRotating = $(this).data('rotating');
+
+        $(this).data('rotating', !isRotating);
+
+        rotatingToRight = !isRotating;
+
+        $(this).find('span').text(rotatingToRight ? 'Disable Right Rotation' : 'Enable Rotation to Right');
+
+        helpers.showToast(rotatingToRight ? 'Rotation to the right enabled' : 'Rotation disabled');
+    });
+
+    $('#rotateToLeft').on('click', function () {
+        const isRotating = $(this).data('rotating');
+
+        $(this).data('rotating', !isRotating);
+
+        rotatingToLeft = !isRotating;
+
+        $(this).find('span').text(rotatingToLeft ? 'Disable Left Rotation' : 'Enable Rotation to Left');
+
+        helpers.showToast(rotatingToLeft ? 'Rotation to the left enabled' : 'Rotation disabled');
+    });
+
     function animate() {
         requestAnimationFrame(animate);
+
+        if (rotatingToRight && currentModel) currentModel.rotation.z += 0.01;
+        if (rotatingToLeft && currentModel) currentModel.rotation.z -= 0.01;
 
         controls.update();
 

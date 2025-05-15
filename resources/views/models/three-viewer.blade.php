@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('header-content')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
     <script type="importmap">
         {
           "imports": {
@@ -15,6 +17,24 @@
     <!-- Left control panel -->
     <div class="fixed top-36 bottom-0 left-4 z-30 flex flex-col space-y-4">
         @include('components.model-selector')
+
+        <button id="rotateOnceRight" class="control-panel-btn-gray flex items-center">
+            Rotate Once Right
+            <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+
+        <button id="rotateOnceLeft" class="control-panel-btn-gray">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Rotate Once Left
+        </button>
+
+        <button id="rotateToRight" class="control-panel-btn-gray" data-rotating="false">
+            <span>Enable Rotation to Right</span>
+        </button>
+
+        <button id="rotateToLeft" class="control-panel-btn-gray" data-rotating="false">
+            <span>Enable Rotation to Left</span>
+        </button>
 
         <button id="resetCameraBtn" class="control-panel-btn-gray">Reset View</button>
 

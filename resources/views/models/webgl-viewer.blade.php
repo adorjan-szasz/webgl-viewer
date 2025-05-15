@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('header-content')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
     <!-- WebGL + OBJ loader -->
     <script src="https://cdn.jsdelivr.net/npm/webgl-obj-loader@2.0.3/dist/webgl-obj-loader.min.js"></script>
 @endsection
@@ -10,7 +12,15 @@
     <div class="fixed top-36 bottom-0 left-4 z-30 flex flex-col space-y-4">
         @include('components.model-selector')
 
-        <button id="rotateBtn" class="control-panel-btn-gray">Rotate</button>
+        <button id="rotateToRight" class="control-panel-btn-gray">
+            Rotate to Right
+            <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+
+        <button id="rotateToLeft" class="control-panel-btn-gray">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Rotate to Left
+        </button>
 
         <button id="resetCameraBtn" class="control-panel-btn-gray">Reset View</button>
 

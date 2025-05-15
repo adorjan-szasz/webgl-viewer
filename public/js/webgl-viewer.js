@@ -240,11 +240,19 @@ $(document).ready(function () {
         drawScene();
     });
 
-    $('#rotateBtn').click(() => {
-        camera.rotation[1] += 0.1;
+    $('#rotateToRight').click(() => {
+        rotateCamera(1);
+    });
+
+    $('#rotateToLeft').click(() => {
+        rotateCamera(-1);
+    });
+
+    function rotateCamera(direction) {
+        camera.rotation[1] += direction * 0.1;
 
         drawScene();
-    });
+    }
 
     $('#resetCameraBtn').click(() => {
         camera.position = [0, 0, -6];
